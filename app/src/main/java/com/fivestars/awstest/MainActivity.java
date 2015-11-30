@@ -1,6 +1,5 @@
 package com.fivestars.awstest;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -51,36 +50,39 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        final DeveloperAuthenticationProvider developerProvider = new DeveloperAuthenticationProvider(
+                "real-phone",
+                "us-east-1:882fddd0-eebe-4611-a265-b47ce9d8fd98", // Identity Pool ID
+                Regions.US_EAST_1);
 
         CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
                 getApplicationContext(),
-                "us-east-1:882fddd0-eebe-4611-a265-b47ce9d8fd98", // Identity Pool ID
-                Regions.US_EAST_1 // Region
-        );
+                developerProvider,
+                Regions.US_EAST_1);
+
+
         Log.d("testing", credentialsProvider.toString());
 
-        AmazonS3 s3 = new AmazonS3Client(credentialsProvider);
-        Log.d("testing", s3.toString());
-
-
-        //s3.createBucket("fivestars-android-test2");
+        final AmazonS3 s3 = new AmazonS3Client(credentialsProvider);
         final TransferUtility transferUtility = new TransferUtility(s3, getApplicationContext());
-        Log.d("testing", transferUtility.toString());
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View view) {
+                /*
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("image/*");
                 startActivityForResult(intent, RESULT_OK);
+                */
 
                 final TextView tv = (TextView) findViewById(R.id.tv_hello_world);
 
                 Log.d("testing", "before upload");
                 TransferObserver observer = transferUtility.upload(
-                        "fivestars-android-test",     /* The bucket to upload to */
-                        "test-file",    /* The key for the uploaded object */
+                        "fivestars-android-test-auth",     /* The bucket to upload to */
+                        developerProvider.getIdentityId(),  /* The key for the uploaded object */
+                        //"abc",
                         f        /* The file where the data to upload exists */
                 );
                 Log.d("testing", "after upload");
@@ -108,7 +110,8 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(int id, Exception ex) {
-                        Log.d("testing", String.valueOf(id));
+                        Log.d("testing!!", String.valueOf(id));
+                        Log.d("testing!!", ex.getMessage());
                         ex.printStackTrace();
                     }
                 });

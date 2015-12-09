@@ -1,6 +1,8 @@
 package com.fivestars.awstest;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +21,13 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.Headers;
+import com.amazonaws.services.s3.model.AccessControlList;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.Grantee;
+import com.amazonaws.services.s3.model.GroupGrantee;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.Permission;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,9 +59,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        String uid = "eric";
+        final String bucketName = "awesomestartup-user-photos";
+        String idPool = "us-east-1:21a69e7a-2dc0-4aef-a7dc-4426aff37d35";
+
         final DeveloperAuthenticationProvider developerProvider = new DeveloperAuthenticationProvider(
-                "real-phone",
-                "us-east-1:882fddd0-eebe-4611-a265-b47ce9d8fd98", // Identity Pool ID
+                uid,
+                idPool, // Identity Pool ID
                 Regions.US_EAST_1);
 
         CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
@@ -79,11 +92,12 @@ public class MainActivity extends AppCompatActivity {
                 final TextView tv = (TextView) findViewById(R.id.tv_hello_world);
 
                 Log.d("testing", "before upload");
+
                 TransferObserver observer = transferUtility.upload(
-                        "fivestars-android-test-auth",     /* The bucket to upload to */
+                        bucketName,     /* The bucket to upload to */
                         developerProvider.getIdentityId(),  /* The key for the uploaded object */
                         //"abc",
-                        f        /* The file where the data to upload exists */
+                        f      /* The file where the data to upload exists */
                 );
                 Log.d("testing", "after upload");
 
@@ -97,6 +111,14 @@ public class MainActivity extends AppCompatActivity {
                         if (state.equals(TransferState.COMPLETED)) {
                             Snackbar.make(view, "all fucking done", Snackbar.LENGTH_LONG)
                                     .setAction("Action", null).show();
+                            /*Runnable r = new Runnable() {
+                                @Override
+                                public void run() {
+                                    s3.setObjectAcl(bucketName, developerProvider.getIdentityId(), CannedAccessControlList.PublicRead);
+                                }
+                            };
+                            AsyncTask.execute(r);
+                            */
                         }
                         Log.d("testing", String.valueOf(id));
                         Log.d("testing", state.toString());
